@@ -41,31 +41,15 @@ pub mod game_2048 {
         }
 
         fn scan_diff(&self, next_board: &[[u32; 4]; 4]) -> bool {
-            let mut i: usize = 0;
-            let mut j: usize = 0;
             let mut is_diff: bool = false;
 
             // Loop over the array until a diff is found betweent the two arrays
-            'row: loop {
-                if i >= next_board.len() {
-                    break;
-                }
-
-                'col: loop {
-                    if j >= next_board[0].len() {
-                        break 'col;
-                    }
-
-                    if next_board[i][j] != self.board[i][j] {
+            for i in 0..self.board.len() {
+                for (j, cell) in self.board[i].into_iter().enumerate() {
+                    if cell != next_board[i][j] {
                         is_diff = true;
-                        break 'row;
                     }
-
-                    j += 1;
-                    continue;
                 }
-                i += 1;
-                continue;
             }
 
             is_diff
@@ -234,21 +218,25 @@ pub mod game_2048 {
             }
         }
 
-        fn update_game_state(&mut self) {
-            let moves_to_try = [Moves::LEFT, Moves::RIGHT, Moves::UP, Moves::DOWN];
-            let mut counter = 0;
+        fn update_game_state(
+            &mut self,
+        ) -> ([[u32; 4]; 4], [[u32; 4]; 4], [[u32; 4]; 4], [[u32; 4]; 4]) {
             self.state = GameStates::DEAD;
 
-            loop {
-                if self.scan_diff(&self.make_move(moves_to_try[counter])) {
-                    self.state = GameStates::ALIVE;
-                    break;
-                } else {
-                    println!("No changes made with that move");
-                }
+            let left_move: [[u32; 4]; 4] = self.make_move(Moves::LEFT);
+            let right_move: [[u32; 4]; 4] = self.make_move(Moves::RIGHT);
+            let up_move: [[u32; 4]; 4] = self.make_move(Moves::UP);
+            let down_move: [[u32; 4]; 4] = self.make_move(Moves::DOWN);
 
-                counter += 1;
+            if self.scan_diff(&left_move)
+                || self.scan_diff(&right_move)
+                || self.scan_diff(&up_move)
+                || self.scan_diff(&down_move)
+            {
+                self.state = GameStates::ALIVE;
             }
+
+            (left_move, right_move, up_move, down_move)
         }
 
         pub fn game_loop(&mut self, next_move: Moves) {
